@@ -1,5 +1,5 @@
 game.Players.LocalPlayer.Chatted:Connect(function(msg)
     if msg:lower():find("key") then
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/GGH52lan/GGH52lan/main/keyboard.txt"))()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/advxzivhsjjdhxhsidifvsh/mobkeyboard/main/main.txt"))()
     end
 end)
