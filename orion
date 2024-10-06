@@ -667,8 +667,8 @@ function OrionLib:MakeWindow(WindowConfig)
 		UIHidden = true
 		OrionLib:MakeNotification({
 			Name = "Interface Hidden",
-			Content = "Tap RightShift to reopen the interface, or if on mobile, type in the roblox chat 'key' for a keyboard",
-			Time = 10
+			Content = "Tap RightShift to reopen the interface, or if on mobile, type in the roblox chat 'key' for a keyboard. After, press on left shift to reopen the interface.",
+			Time = 16.5
 		})
 		WindowConfig.CloseCallback()
 	end)
