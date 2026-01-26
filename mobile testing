@@ -810,9 +810,7 @@ function OrionLib:MakeWindow(WindowConfig)
     AddConnection(
         TabHolder.UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"),
         function()
-		local scale = OrionLib:GetEffectiveScale()
-		TabHolder.CanvasSize =
-		    UDim2.new(0, 0, 0, (TabHolder.UIListLayout.AbsoluteContentSize.Y + 16) * scale)
+		OrionLib:_SetScrollCanvas(TabHolder, 16)
         end
     )
 
@@ -1334,9 +1332,7 @@ function OrionLib:MakeWindow(WindowConfig)
         AddConnection(
             Container.UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"),
             function()
-                local scale = OrionLib:GetEffectiveScale()
-                Container.CanvasSize =
-                    UDim2.new(0, 0, 0, (Container.UIListLayout.AbsoluteContentSize.Y + 30) * scale)
+                OrionLib:_SetScrollCanvas(Container, 30)
             end
         )
 
@@ -2104,8 +2100,7 @@ function OrionLib:MakeWindow(WindowConfig)
                 AddConnection(
                     DropdownList:GetPropertyChangedSignal("AbsoluteContentSize"),
                     function()
-                        local scale = OrionLib:GetEffectiveScale()
-                        DropdownContainer.CanvasSize = UDim2.new(0, 0, 0, DropdownList.AbsoluteContentSize.Y * scale)
+                        OrionLib:_SetScrollCanvas(DropdownContainer)
                     end
                 )
 
@@ -3173,11 +3168,7 @@ function OrionLib:SetScale(scale)
     -- ▼ NEW: force scroll refresh
     for _, obj in ipairs(self.ThemeObjects.Divider or {}) do
         if obj:IsA("ScrollingFrame") then
-            local layout = obj:FindFirstChildOfClass("UIListLayout")
-            if layout then
-                obj.CanvasSize =
-                    UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y * s)
-            end
+            OrionLib:_SetScrollCanvas(obj, OrionLib._ScrollPads and OrionLib._ScrollPads[obj] or 0)
         end
     end
 end
@@ -3194,9 +3185,8 @@ function OrionLib:_SetScrollCanvas(sf, extra)
     OrionLib._ScrollPads[sf] = extra
 
     local layout = sf:FindFirstChildOfClass("UIListLayout")
-    local s = OrionLib:GetEffectiveScale()
     if layout then
-        sf.CanvasSize = UDim2.new(0, 0, 0, (layout.AbsoluteContentSize.Y + extra) * s)
+        sf.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + extra)
     end
 end
 
