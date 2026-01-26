@@ -755,6 +755,11 @@ function OrionLib:Init()
     end
 end
 
+function OrionLib:GetEffectiveScale()
+    return (self._WindowScale and self._WindowScale.Scale) or 1
+end
+
+
 function OrionLib:MakeWindow(WindowConfig)
     local FirstTab = true
     local Minimized = false
@@ -805,7 +810,9 @@ function OrionLib:MakeWindow(WindowConfig)
     AddConnection(
         TabHolder.UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"),
         function()
-            TabHolder.CanvasSize = UDim2.new(0, 0, 0, TabHolder.UIListLayout.AbsoluteContentSize.Y + 16)
+		local scale = OrionLib:GetEffectiveScale()
+		TabHolder.CanvasSize =
+		    UDim2.new(0, 0, 0, (TabHolder.UIListLayout.AbsoluteContentSize.Y + 16) * scale)
         end
     )
 
@@ -1327,7 +1334,9 @@ function OrionLib:MakeWindow(WindowConfig)
         AddConnection(
             Container.UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"),
             function()
-                Container.CanvasSize = UDim2.new(0, 0, 0, Container.UIListLayout.AbsoluteContentSize.Y + 30)
+                local scale = OrionLib:GetEffectiveScale()
+                Container.CanvasSize =
+                    UDim2.new(0, 0, 0, (Container.UIListLayout.AbsoluteContentSize.Y + 30) * scale)
             end
         )
 
@@ -3150,19 +3159,28 @@ function OrionLib:Destroy()
     Orion:Destroy()
 end
 
--- ▼ NEW: global UI scale functions
 function OrionLib:SetScale(scale)
-    -- force numeric and clamp
-    local s = tonumber(scale) or 1
-    s = math.clamp(s, 0.5, 2)  -- adjust min/max to taste
-    -- apply to main window and notifications
+    local s = math.clamp(tonumber(scale) or 1, 0.5, 2)
+
     if self._WindowScale then
         self._WindowScale.Scale = s
     end
     if self._NotifScale then
         self._NotifScale.Scale = s
     end
+
+    -- ▼ NEW: force scroll refresh
+    for _, obj in ipairs(self.ThemeObjects.Divider or {}) do
+        if obj:IsA("ScrollingFrame") then
+            local layout = obj:FindFirstChildOfClass("UIListLayout")
+            if layout then
+                obj.CanvasSize =
+                    UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y * s)
+            end
+        end
+    end
 end
+
 
 function OrionLib:GetScale()
     return (self._WindowScale and self._WindowScale.Scale) or 1
