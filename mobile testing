@@ -2104,7 +2104,8 @@ function OrionLib:MakeWindow(WindowConfig)
                 AddConnection(
                     DropdownList:GetPropertyChangedSignal("AbsoluteContentSize"),
                     function()
-                        DropdownContainer.CanvasSize = UDim2.new(0, 0, 0, DropdownList.AbsoluteContentSize.Y)
+                        local scale = OrionLib:GetEffectiveScale()
+                        DropdownContainer.CanvasSize = UDim2.new(0, 0, 0, DropdownList.AbsoluteContentSize.Y * scale)
                     end
                 )
 
@@ -3184,6 +3185,19 @@ end
 
 function OrionLib:GetScale()
     return (self._WindowScale and self._WindowScale.Scale) or 1
+end
+
+OrionLib._ScrollPads = OrionLib._ScrollPads or {} -- [ScrollingFrame] = extraPixels
+
+function OrionLib:_SetScrollCanvas(sf, extra)
+    extra = extra or 0
+    OrionLib._ScrollPads[sf] = extra
+
+    local layout = sf:FindFirstChildOfClass("UIListLayout")
+    local s = OrionLib:GetEffectiveScale()
+    if layout then
+        sf.CanvasSize = UDim2.new(0, 0, 0, (layout.AbsoluteContentSize.Y + extra) * s)
+    end
 end
 
 return OrionLib
