@@ -188,10 +188,12 @@ function OrionLib:CreateToggleButton(opts)
     Holder.Position = btnPos
     Holder.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
     Holder.BorderSizePixel = 0
-    Holder.Active = true
     Holder.Parent = Orion
+    Holder.Active = true
 
-    Instance.new("UICorner", Holder).CornerRadius = UDim.new(1, 0)
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(1, 0)
+    corner.Parent = Holder
 
     local stroke = Instance.new("UIStroke")
     stroke.Thickness = 1.2
@@ -207,49 +209,21 @@ function OrionLib:CreateToggleButton(opts)
     btn.Font = Enum.Font.GothamBlack
     btn.TextSize = 14
     btn.TextColor3 = Color3.fromRGB(240, 240, 240)
-    btn.Active = true
     btn.Parent = Holder
+    btn.Active = true
 
-    -- drag logic
+    -- drag by the button, move the holder (mobile-safe)
     AddDraggingFunctionality(btn, Holder)
 
-    -- tap vs drag detection (mobile-safe)
-    local startPos
-    local moved = false
-    local THRESHOLD = 10 -- pixels
-
-    btn.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1
-        or input.UserInputType == Enum.UserInputType.Touch then
-            startPos = input.Position
-            moved = false
-        end
-    end)
-
-    btn.InputChanged:Connect(function(input)
-        if startPos and
-           (input.UserInputType == Enum.UserInputType.MouseMovement
-         or input.UserInputType == Enum.UserInputType.Touch) then
-            local delta = input.Position - startPos
-            if math.abs(delta.X) + math.abs(delta.Y) >= THRESHOLD then
-                moved = true
-            end
-        end
-    end)
-
-    btn.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1
-        or input.UserInputType == Enum.UserInputType.Touch then
-            if not moved then
-                OrionLib:ToggleUI()
-            end
-            startPos = nil
-        end
+    -- simple toggle
+    btn.MouseButton1Click:Connect(function()
+        OrionLib:ToggleUI()
     end)
 
     OrionLib._ToggleBtn = Holder
     return Holder
 end
+
 
 
 
