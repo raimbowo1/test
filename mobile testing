@@ -62,6 +62,8 @@ else
 end
 
 
+
+
 if gethui then
     for _, Interface in ipairs(gethui():GetChildren()) do
         if Interface.Name == Orion.Name and Interface ~= Orion then
@@ -162,6 +164,77 @@ local function AddDraggingFunctionality(DragPoint, Main)
             )
         end
     )
+end
+
+-- ▼ NEW: UI toggle button (floating)
+OrionLib._ToggleBtn = nil
+OrionLib._MainWindow = nil
+OrionLib._UIHidden = false
+
+function OrionLib:CreateToggleButton(opts)
+    opts = opts or {}
+    local btnText = opts.Text or "UI"
+    local btnSize = opts.Size or UDim2.new(0, 50, 0, 50)
+    local btnPos = opts.Position or UDim2.new(0, 20, 0.5, -25)
+
+    -- destroy old one if re-called
+    if OrionLib._ToggleBtn then
+        OrionLib._ToggleBtn:Destroy()
+        OrionLib._ToggleBtn = nil
+    end
+
+    local Holder = Instance.new("Frame")
+    Holder.Name = "Orion_ToggleButtonHolder"
+    Holder.Size = btnSize
+    Holder.Position = btnPos
+    Holder.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    Holder.BorderSizePixel = 0
+    Holder.Parent = Orion
+    Holder.Active = true
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(1, 0)
+    corner.Parent = Holder
+
+    local stroke = Instance.new("UIStroke")
+    stroke.Thickness = 1.2
+    stroke.Color = Color3.fromRGB(120, 120, 120)
+    stroke.Transparency = 0.2
+    stroke.Parent = Holder
+
+    local btn = Instance.new("TextButton")
+    btn.Name = "Btn"
+    btn.Size = UDim2.new(1, 0, 1, 0)
+    btn.BackgroundTransparency = 1
+    btn.Text = btnText
+    btn.Font = Enum.Font.GothamBlack
+    btn.TextSize = 14
+    btn.TextColor3 = Color3.fromRGB(240, 240, 240)
+    btn.Parent = Holder
+
+    -- make it draggable using your existing function
+    AddDraggingFunctionality(Holder, Holder)
+
+    btn.MouseButton1Click:Connect(function()
+        OrionLib:ToggleUI()
+    end)
+
+    OrionLib._ToggleBtn = Holder
+    return Holder
+end
+
+function OrionLib:ToggleUI(force)
+    if not OrionLib._MainWindow then return end
+
+    local newState
+    if force == nil then
+        newState = not OrionLib._MainWindow.Visible
+    else
+        newState = force and true or false
+    end
+
+    OrionLib._MainWindow.Visible = newState
+    OrionLib._UIHidden = not newState
 end
 
 local function Create(Name, Properties, Children)
@@ -1025,6 +1098,22 @@ function OrionLib:MakeWindow(WindowConfig)
         "Main"
     )
 
+	-- ▼ NEW: store reference for toggle
+	OrionLib._MainWindow = MainWindow
+	
+	-- ▼ NEW: auto-create floating button (you can disable by setting WindowConfig.ToggleButton = false)
+	if WindowConfig.ToggleButton == nil then
+	    WindowConfig.ToggleButton = true
+	end
+	if WindowConfig.ToggleButton then
+	    OrionLib:CreateToggleButton({
+	        Text = "UI",
+	        Size = UDim2.new(0, 50, 0, 50),
+	        Position = UDim2.new(0, 20, 0.5, -25),
+	    })
+	end
+
+
     -- ▼ NEW: keep centered and add UIScale
     MainWindow.AnchorPoint = Vector2.new(0.5, 0.5)
     MainWindow.Position = UDim2.new(0.5, 0, 0.5, 0)
@@ -1051,16 +1140,14 @@ function OrionLib:MakeWindow(WindowConfig)
     AddConnection(
         CloseBtn.MouseButton1Up,
         function()
-            MainWindow.Visible = false
-            UIHidden = true
-            OrionLib:MakeNotification(
-                {
-                    Name = "Interface Hidden",
-                    Content = "Tap RightShift to reopen the interface",
-                    Time = 5
-                }
-            )
-            WindowConfig.CloseCallback()
+    	OrionLib:ToggleUI(false)
+    	OrionLib._UIHidden = true
+    	OrionLib:MakeNotification({
+    	    Name = "Interface Hidden",
+    	    Content = "Tap RightShift or the UI button to reopen",
+    	    Time = 5
+    	})
+    	WindowConfig.CloseCallback()
         end
     )
 
@@ -1068,7 +1155,8 @@ function OrionLib:MakeWindow(WindowConfig)
         UserInputService.InputBegan,
         function(Input)
             if Input.KeyCode == Enum.KeyCode.RightShift and UIHidden then
-                MainWindow.Visible = true
+				OrionLib:ToggleUI(true)
+			    OrionLib._UIHidden = false
             end
         end
     )
